@@ -3,6 +3,7 @@ library(ggplot2)
 
 theme_set(theme_light(base_size = 16))
 theme_update(
+  plot.title = element_text(face = "bold", size = 10.5),
   axis.line = element_line(color = "grey65", linewidth = 0.5), 
   axis.text = element_text(color = "grey45", size = 10), 
   panel.grid.minor = element_blank(),
