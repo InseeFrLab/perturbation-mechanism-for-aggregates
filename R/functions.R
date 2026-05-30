@@ -100,6 +100,20 @@ assess_risk_I <- function(rho, n, sg_nu, sg_eps, beta){
   qZloss(b, rho, n, sg_nu, sg_eps) - qZloss(a, rho, n, sg_nu, sg_eps)
 }
 
+#' Worst case of riskI for rho in (0, 1].
+#'
+#' @inheritParams make_noisy
+#' @param rho_grid 
+#'
+#' @returns
+#' @export
+#'
+#' @examples
+worst_case_risk_I <- function(n, sg_nu, sg_eps, beta,
+                              rho_grid = seq(0.001, 1, by = 0.001)) {
+  max(assess_risk_I(rho_grid, n, sg_nu, sg_eps, beta))
+}
+
 #' Assess the risk mu_II = P( |(Y'-X2 - X1)/X1| < beta)
 #'
 #' @inheritParams make_noisy 
@@ -110,7 +124,7 @@ assess_risk_I <- function(rho, n, sg_nu, sg_eps, beta){
 #' @export
 #'
 #' @examples
-assess_risk_II <- function(rho, n, sg_nu, sg_eps, rho2, beta){
+assess_risk_II <- function(rho, rho2, n, sg_nu, sg_eps, beta){
   
   a <- (1 - beta)*rho + rho2 - 1 
   b <- (1 + beta)*rho + rho2 - 1 
@@ -119,25 +133,24 @@ assess_risk_II <- function(rho, n, sg_nu, sg_eps, rho2, beta){
 }
 
 
-#' Cumulative distribution function of |Delta| = |(delta' - delta)/delta|
+#' Worst case of risk II for rho in rho dans (0.5, 1] 
+#' and rho2 = 1 - rho (worst case of the worst cases)
 #'
-#' @param q quantile value
-#' @inheritParams make_noisy
+#' @param n 
+#' @param sg_nu 
+#' @param sg_eps 
+#' @param beta 
+#' @param rho_grid 
 #'
 #' @returns
 #' @export
 #'
 #' @examples
-#' qZloss(0.2, rho = 0.5, sg_nu = 0.25, sg_eps = 0.01)
-qDeltaloss <- function(q, rho, n, sg_nu, sg_eps){
-  
-  std <- sqrt(2) * sg_eps
-  
-  return( 2*pnorm(q, mean = 0, sd = std) - 1)
-  
+worst_case_risk_II <- function(n, sg_nu, sg_eps, beta,
+                               rho_grid = seq(0.5, 0.999, by = 0.001)) {
+  rho2_grid <- 1 - rho_grid
+  max(assess_risk_II(rho_grid, rho2_grid, n, sg_nu, sg_eps, beta))
 }
-
-
 
 #' Assess the risk mu_DIFF = P( |(delta'-delta)/delta| < beta)
 #'
@@ -148,12 +161,10 @@ qDeltaloss <- function(q, rho, n, sg_nu, sg_eps){
 #' @export
 #'
 #' @examples
-assess_risk_DIFF <- function(rho, n, sg_eps, beta){
-  
-  a <- (1 - beta)*rho + rho2 - 1 
-  b <- (1 + beta)*rho + rho2 - 1 
+assess_risk_DIFF <- function(sg_eps, beta){
 
-  qDeltaloss(b, rho, n, sg_nu, sg_eps) - qDeltaloss(a, rho, n, sg_nu, sg_eps)
+  std <- sqrt(2) * sg_eps
+  pnorm(beta, mean = 0, sd = std) - pnorm(-beta, mean = 0, sd = std)
 }
 
 
