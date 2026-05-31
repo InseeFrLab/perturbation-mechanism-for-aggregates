@@ -47,11 +47,11 @@ bind_cols(params, IC_Z_loss) |>
     # TeX("Perturbation relative moyenne (E(|Z|) en fonction de $\\rho$"),
     subtitle = TeX("$\\sigma_\\nu=0.2$, $\\sigma_\\epsilon=0.025$")) +
   theme(
-    legend.position = "inside",
-    legend.position.inside = c(0.1, 0.25)
+    legend.position = "bottom"
+    # legend.position.inside = c(0.1, 0.25)
   )
 
-ggsave(filename = "perte_relative_IC_cas_unique.png", device = "png", dpi = 150)
+ggsave(filename = "figures/perte_relative_IC_cas_unique.png", width = 4, height = 5)
 
 # Absolute expectation of the relative Loss -------------------
 
@@ -78,9 +78,9 @@ bind_cols(params, loss = abs_expect_Z_loss*100) |>
     # TeX("Perturbation relative moyenne (E(|Z|) en fonction de $\\rho$"),
     subtitle = TeX("$\\sigma_\\nu=0.2$, $\\sigma_\\epsilon=0.025$")) +
   theme(
-    legend.position = "inside",
-    legend.position.inside = c(0.1, 0.5)
+    legend.position = "bottom"
+    # legend.position.inside = c(0.1, 0.5)
   )
 
-ggsave(filename = "perte_relative_esperance_cas_unique.png", device = "png", dpi = 150)
+ggsave(filename = "figures/perte_relative_esperance_cas_unique.png", width = 4, height = 5)
 
