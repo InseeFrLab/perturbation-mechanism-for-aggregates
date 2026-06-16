@@ -18,6 +18,7 @@ beta_I <- 0.2
 dominance_theshold <- 1 - beta_I
 sg_nu_vals <- c(0.05, 0.1, 0.2, 0.3, 0.4, 0.5)
 n_vals <- c(3, 6, 9, 12)
+rho_vals <- seq(0.01,1,0.01)
 
 # sigma_epsilon chosen at the  step 1 (see risk_figures.R).
 # Modifier cette valeur si une autre a ete selectionnee.
@@ -54,6 +55,15 @@ data_ru <- expand_grid(sg_nu = sg_nu_vals, n = n_vals) %>%
                      labels = paste0("n = ", n_vals))
   )
 
+data_ru_all_rhos <- expand_grid(rho = rho_vals, sg_nu = sg_nu_vals, n = n_vals) %>%
+  mutate(
+    risk    = pmap_dbl(list(rho, sg_nu, n), \(x,y,z) assess_risk_I(x,z,y, sg_eps = sg_eps_fixed, beta = beta_I)),
+    loss    = pmap_dbl(list(rho, sg_nu, n), \(x,y,z) abs_expect_relative_loss(x,z,y, sg_eps = sg_eps_fixed))*100
+  ) |>
+  mutate(
+    n_label = factor(n, levels = n_vals, labels = paste0("n = ", n_vals))
+  )
+
 # Verification : la plage d'utilite ne depend pas de n (propriete analytique).
 # Les 4 lignes de meme sg_nu doivent avoir le meme u_max.
 stopifnot(
@@ -65,7 +75,9 @@ stopifnot(
 )
 
 
-# ---- RU map  -----------------------------------------------------
+# ---- RU map -- first version  -----------------------------------------------------
+# RU map only with risk peak and range of utility
+
 
 pal_nu <- scale_color_viridis_d(
   name   = TeX("$\\sigma_\\nu$"),
@@ -120,6 +132,65 @@ ru_map <- ggplot(data_ru,
 ggsave("figures/ru_map.png", ru_map, width = 11, height = 5.5, dpi = 300)
 
 print(ru_map)
+
+
+# ---- RU map -- second version  -----------------------------------------------------
+# RU map with risk utility couple for each rho
+
+
+ru_map_2 <- ggplot(data_ru_all_rhos, aes(color = factor(sg_nu))) +
+  # line of the lower bound
+  geom_vline(xintercept = loss_min_pct(sg_eps_fixed),
+             linetype = "dotted", color = "grey50", linewidth = 0.6) +
+  # thresholds
+  geom_hline(yintercept = thresholds,
+             linetype = "dashed", color = "grey60", linewidth = 0.5) +
+  # Range of Losses
+  geom_line(aes(x = loss, y = risk), linewidth = 0.9) +
+  # Loss and risk at the dominance trheshold
+  geom_point(
+    data = data_ru_all_rhos |> filter(round(rho,2) %in% c(dominance_theshold, 0.9, 0.95)),
+    aes(x = loss, y = risk, shape = as.factor(rho)), fill = "white", size = 2.2, stroke = 0.8) +
+  # # Loss and risk at rho=0.9
+  # geom_point(
+  #   data = data_ru_all_rhos |> filter(rho == 0.9),
+  #   aes(x = loss, y = risk), shape = 23, fill = "grey", size = 2.2, stroke = 0.8) +
+  # # Loss and risk at rho=0.95
+  # geom_point(
+  #   data = data_ru_all_rhos |> filter(round(rho,2) == 0.95),
+  #   aes(x = loss, y = risk), shape = 15, fill = "grey35", size = 2.2, stroke = 0.8) +
+  # # Upper bound of the loss
+  # geom_point(aes(x = u_max, y = risk),
+  #            shape = 19, size = 2.5) +
+  facet_wrap(~ n_label, nrow = 1) +
+  pal_nu +
+  scale_x_continuous(limits = c(0, 44),
+                     breaks = seq(0,40,10),
+                     expand = c(0,0)
+  ) +
+  scale_y_continuous(limits = c(0, 1.02),
+                     breaks = c(0,0.25,0.5,0.8,1),
+                     expand = c(0,0)
+  ) +
+  scale_shape_discrete(TeX("$\\rho$"), solid=FALSE) +
+  labs(
+    x = TeX(paste0(
+      "Range of the loss ",
+      "$E(|Z| | P = \\rho)$ (%)"
+    )),
+    y = TeX("$\\mu_I^{0.2}$")
+  ) +
+  theme(
+    strip.text = element_text(face = "bold"),
+    legend.position = "bottom",
+    plot.title = element_text(face = "bold", size = 10.5),
+  )
+
+ggsave("figures/ru_map_2.png", ru_map_2, width = 11, height = 5.5, dpi = 300)
+
+print(ru_map_2)
+
+
 
 # ---- Data -------------
 data_ru %>%
