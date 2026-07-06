@@ -141,18 +141,25 @@ assess_risk_II <- function(rho, rho2, n, sg_nu, sg_eps, beta){
 #' @param sg_eps 
 #' @param beta 
 #' @param rho_grid 
+#' @param total the sum of rho + rho_2
 #'
 #' @returns
 #' @export
 #'
 #' @examples
 worst_case_risk_II <- function(n, sg_nu, sg_eps, beta,
-                               rho_grid = seq(0.5, 0.999, by = 0.001)) {
-  rho2_grid <- 1 - rho_grid
+                               rho_grid = seq(0.5, 0.999, by = 0.001), total = 1) {
+  rho2_grid <- total - rho_grid
   max(assess_risk_II(rho_grid, rho2_grid, n, sg_nu, sg_eps, beta))
 }
 
-#' Assess the risk mu_DIFF = P( |(delta'-delta)/delta| < beta)
+#' wrapper from the previous with rho+rho2=0.95
+worst_case_risk_IIb <- function(n, sg_nu, sg_eps, beta,
+                                rho_grid = seq(0.5, 0.999, by = 0.001)) {
+  worst_case_risk_II(n, sg_nu, sg_eps, beta, rho_grid, total = 0.95)
+}
+
+#' Assess the risk mu_DIFF_infty = P( |(delta'-delta)/delta| < beta)
 #'
 #' @inheritParams make_noisy 
 #' @param beta threshold
@@ -163,7 +170,7 @@ worst_case_risk_II <- function(n, sg_nu, sg_eps, beta,
 #' @examples
 assess_risk_DIFF <- function(sg_eps, beta){
 
-  std <- sqrt(2) * sg_eps
+  std <- sg_eps
   pnorm(beta, mean = 0, sd = std) - pnorm(-beta, mean = 0, sd = std)
 }
 
