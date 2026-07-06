@@ -58,8 +58,16 @@ build_curve_data <- function(worst_fun, sg_nu_values, n_values, sg_eps, beta) {
 
 data_I   <- build_curve_data(worst_case_risk_I,  sg_nu_grid,  n_values, sg_eps_fixed, beta_inf_I)
 marks_I  <- build_curve_data(worst_case_risk_I,  sg_nu_marks, n_values, sg_eps_fixed, beta_inf_I)
-data_II  <- build_curve_data(worst_case_risk_II, sg_nu_grid,  n_values, sg_eps_fixed, beta_inf_II)
-marks_II <- build_curve_data(worst_case_risk_II, sg_nu_marks, n_values, sg_eps_fixed, beta_inf_II)
+
+data_IIa  <- build_curve_data(worst_case_risk_II, sg_nu_grid,  n_values, sg_eps_fixed, beta_inf_II)
+marks_IIa <- build_curve_data(worst_case_risk_II, sg_nu_marks, n_values, sg_eps_fixed, beta_inf_II)
+data_IIb  <- build_curve_data(worst_case_risk_IIb, sg_nu_grid,  n_values, sg_eps_fixed, beta_inf_II)
+marks_IIb <- build_curve_data(worst_case_risk_IIb, sg_nu_marks, n_values, sg_eps_fixed, beta_inf_II)
+
+data_II <- bind_rows(data_IIa |> mutate(scenario="IIa"),
+                    data_IIb |> mutate(scenario="IIb"))
+marks_II <- bind_rows(marks_IIa |> mutate(scenario="IIa"),
+                      marks_IIb |> mutate(scenario="IIb"))
 
 pal_n <- scale_color_viridis_d(name = "n", end = 0.85)
 
@@ -94,7 +102,7 @@ p_I <- ggplot(data_I, aes(sg_nu, risk, color = n)) +
 # ---- (c) Scenario II --------------------------------------------------------
 p_II <- ggplot(data_II, aes(sg_nu, risk, color = n)) +
   geom_hline(yintercept = thresholds, linetype = "dashed", color = "grey60") +
-  geom_line(linewidth = 0.9) +
+  geom_line(aes(linetype=scenario), linewidth = 0.9) +
   geom_point(data = marks_II, size = 1.6) +
   scale_x_continuous(limits = c(0, 0.51), expand = c(0,0)) +
   scale_y_continuous(breaks = c(seq(0,1,0.25),0.8), limits = c(0, 1.01), expand = c(0,0)) +
@@ -108,42 +116,24 @@ p_II <- ggplot(data_II, aes(sg_nu, risk, color = n)) +
 fig_risques <- (p_diff | p_I | p_II ) +
   plot_layout(guides = "collect") +
   plot_annotation(
-    caption = sprintf(
-             "Panels (b) & (c) : \u03c3_\u03b5 set to %.3f.",
-      sg_eps_fixed)
+    caption = TeX(
+      sprintf(
+        "Panels (b) & (c) : $\\sigma_\\epsilon=%.3f$", 
+        sg_eps_fixed
+      )
+    )
+      # sprintf(
+      #        "Panels (b) & (c) : \u03c3_\u03b5 set to %.3f.",
+      # sg_eps_fixed)
   ) &
-  theme(legend.position = "bottom")
+  theme(
+    legend.position = "bottom",
+    legend.title.position = "top"
+    )
 
 ggsave("figures/monitoring_risks.png", fig_risques, width = 11, height = 5, dpi = 300)
 
 print(fig_risques)
 
 
-# ---- Profile of the risks I and II depending on rho -------------------------
-rho_seq    <- seq(0.001, 1, by = 0.001)
-sg_nu_demo <- 0.3
-n_demo     <- 6
 
-rho_seq_II <- rho_seq[rho_seq >= 0.5]
-
-data_shape <- bind_rows(
-  tibble(rho = rho_seq, scenario = "I",
-         risk = assess_risk_I(rho_seq, n = n_demo, sg_nu = sg_nu_demo,
-                              sg_eps = sg_eps_fixed, beta = beta_inf_I)),
-  tibble(rho = rho_seq_II, scenario = "II",
-         risk = assess_risk_II(rho_seq_II, 1 - rho_seq_II, n = n_demo,
-                               sg_nu = sg_nu_demo, sg_eps = sg_eps_fixed,
-                               beta = beta_inf_II))
-)
-
-p_shape <- ggplot(data_shape, aes(rho, risk, color = scenario)) +
-  geom_hline(yintercept = thresholds, linetype = "dashed", color = "grey60") +
-  geom_line(linewidth = 0.9) +
-  scale_color_viridis_d(name = "Scenario", end = 0.7) +
-  scale_x_continuous(breaks = c(seq(0,1,0.25)), limits = c(0, 1.01), expand = c(0,0)) +
-  scale_y_continuous(breaks = c(seq(0,1,0.2)), limits = c(-0.005, 1.01), expand = c(0,0)) +
-  labs(title = sprintf("Risk profile in \u03c1 (n = %d, \u03c3_\u03bd = %.2f, \u03c3_\u03b5 = %.3f)", n_demo, sg_nu_demo, sg_eps_fixed),
-       x = TeX("$\\rho$"), y = "Risk") +
-  theme(legend.position = "inside", legend.position.inside = c(0.25,0.25))
-
-ggsave("figures/profile_risks_rho.png", p_shape, width = 5, height = 3.6)

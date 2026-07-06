@@ -16,13 +16,13 @@ source("R/theme_ggplot.R")
 # ---- Parameters -------------------------------------------------------------
 beta_I <- 0.2
 dominance_theshold <- 1 - beta_I
-sg_nu_vals <- c(0.05, 0.1, 0.2, 0.3, 0.4, 0.5)
+sg_nu_vals <- c(0.1, 0.2, 0.3, 0.4, 0.5)
 n_vals <- c(3, 6, 9, 12)
 rho_vals <- seq(0.01,1,0.01)
 
 # sigma_epsilon chosen at the  step 1 (see risk_figures.R).
 # Modifier cette valeur si une autre a ete selectionnee.
-sg_eps_fixed <- 0.022
+sg_eps_fixed <- 0.031
 
 thresholds  <- c(0.5, 0.8)
 
@@ -118,7 +118,7 @@ ru_map <- ggplot(data_ru,
                      ) +
   labs(
     x = TeX(paste0(
-      "Range of the loss ",
+      "Loss of information ",
       "$E(|Z| | P = \\rho)$ (%)"
     )),
     y = TeX("$\\mu_I^{0.2}$  (worst case in $\\rho$)")
@@ -175,7 +175,7 @@ ru_map_2 <- ggplot(data_ru_all_rhos, aes(color = factor(sg_nu))) +
   scale_shape_discrete(TeX("$\\rho$"), solid=FALSE) +
   labs(
     x = TeX(paste0(
-      "Range of the loss ",
+      "Loss of information ",
       "$E(|Z| | P = \\rho)$ (%)"
     )),
     y = TeX("$\\mu_I^{0.2}$")
